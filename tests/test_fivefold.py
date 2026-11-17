@@ -18,6 +18,7 @@ def test_fivefold_summary_counts_each_clip_once(tmp_path):
             for index in range(400)
         ]
         report = {
+            "model": "panns_frozen_head",
             "test_fold": fold,
             "test_clips": 400,
             "checkpoint_epoch": 24,
@@ -35,6 +36,7 @@ def test_fivefold_summary_counts_each_clip_once(tmp_path):
     summary = combine_fold_reports(report_paths, summary_path)
 
     assert summary["test_clips"] == 2000
+    assert summary["model"] == "panns_frozen_head"
     assert summary["pooled"]["accuracy"] == pytest.approx(1999 / 2000)
     assert summary["mean_fold_accuracy"] == pytest.approx(1999 / 2000)
     fold_one_f1 = (48 + 14 / 15 + 16 / 17) / 50

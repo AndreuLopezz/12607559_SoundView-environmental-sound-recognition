@@ -1,4 +1,4 @@
-"""Combine the five held-out ESC-50 test reports for the CNN baseline."""
+"""Combine five held-out ESC-50 test reports from the same model."""
 
 import json
 from pathlib import Path
@@ -18,6 +18,9 @@ def combine_fold_reports(report_paths: list[Path], output_path: Path) -> dict:
     if [report["test_fold"] for report in reports] != list(range(1, 6)):
         raise ValueError("Expected reports for all five folds")
 
+    model_name = reports[0]["model"]
+    if any(report["model"] != model_name for report in reports):
+        raise ValueError("All five reports must come from the same model")
     class_names = [entry["class_name"] for entry in reports[0]["per_class"]]
     if len(class_names) != 50:
         raise ValueError("Expected the 50 ESC-50 classes")
@@ -65,7 +68,7 @@ def combine_fold_reports(report_paths: list[Path], output_path: Path) -> dict:
         raise ValueError("Expected 40 test clips per ESC-50 class")
 
     summary = {
-        "model": "small_cnn",
+        "model": model_name,
         "test_clips": len(all_clips),
         "mean_fold_accuracy": mean(fold["accuracy"] for fold in fold_scores),
         "mean_fold_macro_f1": mean(fold["macro_f1"] for fold in fold_scores),

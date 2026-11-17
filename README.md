@@ -54,8 +54,8 @@ Once the fold-5 report is saved, open [the five-fold notebook](notebooks/fivefol
 
 ## Pretrained PANNs in Google Colab
 
-Open [the PANNs notebook](notebooks/panns_colab.ipynb) in a Colab GPU runtime. Its first cells install the additional packages from `requirements-panns.txt`, clone the official PANNs source, download the pretrained CNN14 checkpoint to Google Drive, and check its output on a generated tone. The ESC-50 training and evaluation steps will be added to this same notebook after the compatibility check. PANNs expects 32 kHz audio, so its input uses model-specific resampling while the CNN continues to use ESC-50's original 44.1 kHz recordings. Keep the pretrained checkpoint outside Git.
+Open [the PANNs notebook](notebooks/panns_colab.ipynb) in a Colab GPU runtime. It installs the additional packages from `requirements-panns.txt`, loads the pretrained CNN14 checkpoint from Google Drive, and checks its output on a generated tone. It then extracts one frozen 2,048-value representation per ESC-50 clip, trains a new 50-class head with the same five-fold protocol as the CNN, and saves fold reports plus `fivefold_summary.json` under `SoundView/panns_frozen_v1/` in Drive. Completed folds are reused when their saved settings match. PANNs expects 32 kHz audio, so its input uses model-specific resampling while the CNN continues to use ESC-50's original 44.1 kHz recordings. Keep checkpoints and feature caches outside Git. Partial fine-tuning can be added to this notebook after the frozen-head result is reviewed.
 
 ## Project status
 
-The repository contains the Assignment 1 proposal, ESC-50 data preparation, and CNN baseline training and evaluation code. The CNN five-fold experiment is complete; the PANNs compatibility check is the first step toward the pretrained comparison. The visual alert demo is planned for a later stage.
+The repository contains the Assignment 1 proposal, ESC-50 data preparation, and CNN baseline training and evaluation code. The CNN five-fold experiment is complete, and the frozen PANNs comparison is ready to run in Colab. Partial fine-tuning and the visual alert demo are planned for later stages.
