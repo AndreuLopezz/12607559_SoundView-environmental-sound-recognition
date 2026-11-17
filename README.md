@@ -34,8 +34,16 @@ python -m soundview.data --data-dir ..\datasets\ESC-50
 python -m pytest -q
 ```
 
-If `soundview` already exists, run `conda install -n soundview python=3.11 pip -y` in place of `conda create` before activating it. The dataset check reports clip, class, and fold counts and fails if metadata refers to missing audio. `soundview.data` also loads ESC-50's mono 16-bit PCM WAV files at their original 44.1 kHz rate and produces 64-band log-Mel spectrograms for the planned CNN. Model training dependencies and commands will be added with the training code.
+If `soundview` already exists, run `conda install -n soundview python=3.11 pip -y` in place of `conda create` before activating it. The dataset check reports clip, class, and fold counts and fails if metadata refers to missing audio. `soundview.data` also loads ESC-50's mono 16-bit PCM WAV files at their original 44.1 kHz rate and produces 64-band log-Mel spectrograms for the planned CNN.
+
+## CNN baseline in Google Colab
+
+Open [the CNN training notebook](notebooks/train_cnn_colab.ipynb) with a Colab GPU runtime after this code has been pushed. You can use the Colab website or connect to that runtime from VS Code. Edit the settings cell if needed, then run the cells in order. The notebook downloads this project and ESC-50 into separate folders and installs dependencies.
+
+The default run uses folds 2, 3, and 4 for training and fold 1 for validation. Fold 5 remains reserved for later evaluation. The run writes `best_cnn.pt` and `training_summary.json` to `/content/runs/cnn_fold5`; the summary includes validation metrics, chosen settings, and elapsed time. Download or copy both files before the Colab runtime disconnects, because `/content` is temporary. If your VS Code connection cannot retrieve remote files, set `OUTPUT_DIR` to a mounted Drive folder instead.
+
+The target set before training is a macro-F1 of at least 0.50 across the five official test folds. This first run reports validation results only; the achieved test value will be added after the five-fold evaluation.
 
 ## Project status
 
-The repository contains the Assignment 1 proposal and the ESC-50 data preparation code. Training, evaluation, and demo commands will be documented here as they are added for Assignment 2.
+The repository contains the Assignment 1 proposal, ESC-50 data preparation, and the CNN baseline training code. Five-fold test evaluation, the pretrained approach, and the visual alert demo will be added in later stages.
