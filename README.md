@@ -52,6 +52,10 @@ After choosing a checkpoint from validation results, open [the evaluation notebo
 
 Once the fold-5 report is saved, open [the five-fold notebook](notebooks/fivefold_cnn_colab.ipynb) in a Colab GPU runtime. It keeps the selected training settings fixed, trains and tests folds 1–4, and reuses the existing fold-5 report. Check the two Drive paths in its settings cell, then run the cells in order. Results are saved to Drive under `SoundView/cnn_fivefold/`. If the runtime disconnects, completed folds can be reused when the same settings are retained. The final `fivefold_summary.json` reports the mean of the five test-fold macro-F1 scores and the pooled score across all 2,000 clips.
 
+## Pretrained PANNs in Google Colab
+
+Open [the PANNs notebook](notebooks/panns_colab.ipynb) in a Colab GPU runtime. Its first cells install the additional packages from `requirements-panns.txt`, clone the official PANNs source, download the pretrained CNN14 checkpoint to Google Drive, and check its output on a generated tone. The ESC-50 training and evaluation steps will be added to this same notebook after the compatibility check. PANNs expects 32 kHz audio, so its input uses model-specific resampling while the CNN continues to use ESC-50's original 44.1 kHz recordings. Keep the pretrained checkpoint outside Git.
+
 ## Project status
 
-The repository contains the Assignment 1 proposal, ESC-50 data preparation, and the CNN baseline training and evaluation code. The five-fold CNN notebook is ready to run; the pretrained approach and visual alert demo are planned for later stages.
+The repository contains the Assignment 1 proposal, ESC-50 data preparation, and CNN baseline training and evaluation code. The CNN five-fold experiment is complete; the PANNs compatibility check is the first step toward the pretrained comparison. The visual alert demo is planned for a later stage.

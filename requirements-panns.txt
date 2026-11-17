@@ -1,0 +1,3 @@
+-r requirements.txt
+librosa>=0.10,<1
+torchlibrosa>=0.1,<1
