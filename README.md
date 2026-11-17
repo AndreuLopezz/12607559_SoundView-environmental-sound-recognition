@@ -44,6 +44,10 @@ The default run uses folds 2, 3, and 4 for training and fold 1 for validation. F
 
 The target set before training is a macro-F1 of at least 0.50 across the five official test folds. This first run reports validation results only; the achieved test value will be added after the five-fold evaluation.
 
+## CNN test evaluation
+
+After choosing a checkpoint from validation results, open [the evaluation notebook](notebooks/evaluate_cnn_colab.ipynb) in a Colab GPU runtime. Its default `RUN_DIR` points to the 40-epoch experiment in Google Drive; change that path if your checkpoint is elsewhere. Run the cells in order. The notebook scores only the reserved fold 5 and saves `test_evaluation.json` beside the checkpoint, with overall metrics, per-class scores, a confusion matrix, clip predictions, and model inference time. Keep this test result separate from validation when deciding on later experiments. The five-fold evaluation is still needed for the planned final comparison.
+
 ## Project status
 
 The repository contains the Assignment 1 proposal, ESC-50 data preparation, and the CNN baseline training code. Five-fold test evaluation, the pretrained approach, and the visual alert demo will be added in later stages.
