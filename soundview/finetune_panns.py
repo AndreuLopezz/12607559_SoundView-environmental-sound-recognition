@@ -233,14 +233,13 @@ def train_full_panns_fold(
         for parameter in model.backbone.parameters()
         if parameter.requires_grad
     ]
+    trainable_parameters = backbone_parameters + list(model.head.parameters())
     optimizer = torch.optim.AdamW(
         [
             {"params": backbone_parameters, "lr": backbone_lr},
             {"params": model.head.parameters(), "lr": head_lr},
         ]
     )
-    use_amp = device.type == "cuda"
-    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
     loss_function = nn.CrossEntropyLoss()
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -260,20 +259,27 @@ def train_full_panns_fold(
         for batch_index, (waveforms, targets) in enumerate(train_loader):
             waveforms = waveforms.to(device, non_blocking=True)
             targets = targets.to(device, non_blocking=True)
+            completed_batches = batch_index + 1
             group_start = batch_index // accumulation_steps * accumulation_steps
             group_size = min(accumulation_steps, total_batches - group_start)
-            with torch.autocast(device.type, dtype=torch.float16, enabled=use_amp):
-                loss = loss_function(model(waveforms), targets)
-            scaler.scale(loss / group_size).backward()
+            # Float32 avoids the overflow observed with CNN14 and the saved
+            # feature normalization in the first mixed-precision run.
+            loss = loss_function(model(waveforms), targets)
+            if not torch.isfinite(loss).item():
+                raise FloatingPointError(
+                    f"Epoch {epoch}, batch {completed_batches}: non-finite training loss"
+                )
+            (loss / group_size).backward()
             train_loss += loss.item() * len(targets)
-            completed_batches = batch_index + 1
             should_step = (
                 completed_batches % accumulation_steps == 0
                 or completed_batches == total_batches
             )
             if should_step:
-                scaler.step(optimizer)
-                scaler.update()
+                torch.nn.utils.clip_grad_norm_(
+                    trainable_parameters, max_norm=1.0, error_if_nonfinite=True
+                )
+                optimizer.step()
                 optimizer.zero_grad(set_to_none=True)
 
         model.eval()
@@ -284,9 +290,12 @@ def train_full_panns_fold(
             for waveforms, targets in validation_loader:
                 waveforms = waveforms.to(device, non_blocking=True)
                 targets = targets.to(device, non_blocking=True)
-                with torch.autocast(device.type, dtype=torch.float16, enabled=use_amp):
-                    scores = model(waveforms)
-                    loss = loss_function(scores, targets)
+                scores = model(waveforms)
+                loss = loss_function(scores, targets)
+                if not torch.isfinite(loss).item():
+                    raise FloatingPointError(
+                        f"Epoch {epoch}: non-finite validation loss"
+                    )
                 validation_loss += loss.item() * len(targets)
                 validation_targets.extend(targets.cpu().tolist())
                 validation_predictions.extend(scores.argmax(dim=1).cpu().tolist())
@@ -337,8 +346,9 @@ def train_full_panns_fold(
     with torch.no_grad():
         for waveforms, targets in test_loader:
             waveforms = waveforms.to(device, non_blocking=True)
-            with torch.autocast(device.type, dtype=torch.float16, enabled=use_amp):
-                scores = model(waveforms)
+            scores = model(waveforms)
+            if not torch.isfinite(scores).all().item():
+                raise FloatingPointError("Non-finite test scores")
             confidences, predictions = scores.softmax(dim=1).max(dim=1)
             test_targets.extend(targets.tolist())
             test_predictions.extend(predictions.cpu().tolist())
@@ -383,6 +393,8 @@ def train_full_panns_fold(
             "accumulation_steps": accumulation_steps,
             "backbone_lr": backbone_lr,
             "head_lr": head_lr,
+            "precision": "float32",
+            "gradient_clip_norm": 1.0,
             "patience": patience,
             "seed": seed,
         },
