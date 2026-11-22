@@ -178,6 +178,40 @@ def benchmark_partial_finetuning(
     }
 
 
+# Reuse a finished fold only when its saved checkpoint and training settings
+# match the experiment being continued. An interrupted fold starts again.
+def load_completed_full_fold(
+    output_dir: Path, test_fold: int, settings: dict
+) -> dict | None:
+    output_dir = Path(output_dir)
+    report_path = output_dir / "test_evaluation.json"
+    if not report_path.is_file():
+        return None
+
+    summary_path = output_dir / "training_summary.json"
+    checkpoint_path = output_dir / "best_full.pt"
+    if not summary_path.is_file() or not checkpoint_path.is_file():
+        raise FileNotFoundError(f"Fold {test_fold} has an incomplete saved run")
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    if summary["settings"] != settings:
+        raise ValueError(f"Fold {test_fold} used different settings")
+    if (
+        summary["model"] != "panns_full_finetune"
+        or report["model"] != "panns_full_finetune"
+        or summary["test_fold_reserved"] != test_fold
+        or report["test_fold"] != test_fold
+        or summary["validation_fold"] != test_fold % 5 + 1
+        or report["test_clips"] != 400
+        or summary["best_epoch"] != report["checkpoint_epoch"]
+        or summary["best_validation_macro_f1"]
+        != report["checkpoint_validation_macro_f1"]
+    ):
+        raise ValueError(f"Fold {test_fold} has inconsistent saved results")
+    return report
+
+
 # Fine-tune all learned CNN14 feature layers on one official split. Validation
 # chooses the checkpoint; the held-out test fold is scored once afterward.
 def train_full_panns_fold(
