@@ -58,4 +58,8 @@ Open [the PANNs notebook](notebooks/panns_colab.ipynb) in a Colab GPU runtime. I
 
 ## Project status
 
-The repository contains the Assignment 1 proposal, ESC-50 data preparation, and CNN baseline training and evaluation code. The CNN and frozen PANNs five-fold experiments are complete. Full PANNs fine-tuning is complete on fold 5; the remaining four folds and the visual alert demo are planned next.
+The repository contains the Assignment 1 proposal, ESC-50 data preparation, and CNN baseline training and evaluation code. The CNN, frozen PANNs, and full PANNs five-fold experiments are complete. The full PANNs run reached 0.8709 mean fold macro-F1, compared with 0.8536 for the frozen head. Hyperparameter search and the visual alert demo are planned next.
+
+## CNN14 hyperparameter search
+
+Open [the separate search notebook](notebooks/panns_hyperparameter_colab.ipynb) in a Colab GPU runtime. It reuses the completed fold-5 run as its baseline, then compares four learning-rate changes, two weight-decay values, and two classifier dropout values. Each trial trains on folds 2–4 and selects its best epoch using fold 1. The reserved test fold is not scored during this search. Trial summaries and the selected validation settings are saved under `SoundView/panns_hyperparameters_v1/` in Drive; completed trials are reused after a disconnect. Test the chosen settings in a separate five-fold run before comparing them with the published baseline.
